@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 const MAX_QUANTITY = 1_000_000;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 function App() {
   const [symbol, setSymbol] = useState("");
@@ -104,7 +105,7 @@ function App() {
         return;
       }
 
-      const response = await fetch("/api/portfolio/metrics", {
+      const response = await fetch(`${API_BASE_URL}/portfolio/metrics`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -112,10 +113,21 @@ function App() {
         }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type") || "";
+      const isJson = contentType.includes("application/json");
+      const data = isJson ? await response.json() : null;
+
       if (!response.ok) {
-        throw new Error(data?.error || "Failed to fetch metrics");
+        throw new Error(
+          data?.error ||
+            "Could not reach the metrics API. In Netlify, set VITE_API_BASE_URL to your backend URL.",
+        );
       }
+
+      if (!data) {
+        throw new Error("Unexpected response from API. Expected JSON.");
+      }
+
       setResult(data);
     } catch (error) {
       console.error("Error fetching metrics:", error);

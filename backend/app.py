@@ -1,4 +1,5 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 import math
 import re
 from services.metrics import calculate_portfolio_metrics
@@ -7,6 +8,8 @@ from services.metrics import calculate_portfolio_metrics
 app = Flask(__name__)
 MAX_QUANTITY = 1_000_000
 SYMBOL_PATTERN = re.compile(r"^[A-Za-z]+$")
+# Keep deployment simple: allow frontend calls from any origin for this demo.
+CORS(app)
 
 @app.route("/portfolio/metrics", methods=["POST"])
 @app.route("/metrics", methods=["POST"])

@@ -55,3 +55,20 @@ Example payload:
 - Symbols are validated on the backend.
 - If market data fails for some symbols, the API returns partial results with warnings.
 - If all symbols fail, the API returns `502`.
+
+## Netlify Deployment
+
+If you deploy only the frontend to Netlify, the app still needs a live backend API URL.
+
+- In Netlify Site settings, add environment variable `VITE_API_BASE_URL`.
+- Set it to your deployed Flask backend URL (for example: `https://your-backend.example.com`).
+- Redeploy after setting the variable.
+
+Without this, requests can return HTML (404 page), which causes the browser error: `Unexpected token '<' ... is not valid JSON`.
+
+### Backend CORS (Required)
+
+This project enables CORS in Flask so your Netlify frontend can call the API.
+
+- Install backend dependencies (includes `Flask-Cors`).
+- Redeploy the backend after pulling latest changes.
