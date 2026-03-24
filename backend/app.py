@@ -11,9 +11,19 @@ SYMBOL_PATTERN = re.compile(r"^[A-Za-z]+$")
 # Keep deployment simple: allow frontend calls from any origin for this demo.
 CORS(app)
 
-@app.route("/portfolio/metrics", methods=["POST"])
-@app.route("/metrics", methods=["POST"])
+@app.route("/portfolio/metrics", methods=["GET", "POST"])
+@app.route("/metrics", methods=["GET", "POST"])
 def portfolio_metrics():
+    if request.method == "GET":
+        return jsonify(
+            {
+                "message": "Use POST to calculate portfolio metrics.",
+                "example_payload": {
+                    "positions": [{"symbol": "AAPL", "quantity": 10}],
+                },
+            }
+        )
+
     data = request.get_json(silent=True)
 
     if not data:

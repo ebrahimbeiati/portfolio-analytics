@@ -1,7 +1,10 @@
 import { useState } from "react";
 
 const MAX_QUANTITY = 1_000_000;
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim();
+const METRICS_API_URL = API_BASE_URL
+  ? `${API_BASE_URL}/portfolio/metrics`
+  : "/api/portfolio/metrics";
 
 function App() {
   const [symbol, setSymbol] = useState("");
@@ -105,7 +108,7 @@ function App() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/portfolio/metrics`, {
+      const response = await fetch(METRICS_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

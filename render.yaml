@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: portfolio-analytics-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    healthCheckPath: /portfolio/metrics
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.1

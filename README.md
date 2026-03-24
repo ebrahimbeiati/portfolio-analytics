@@ -72,3 +72,18 @@ This project enables CORS in Flask so your Netlify frontend can call the API.
 
 - Install backend dependencies (includes `Flask-Cors`).
 - Redeploy the backend after pulling latest changes.
+
+## Free Backend Deploy (Render)
+
+This repo includes [render.yaml](render.yaml), so you can deploy backend without buying a domain.
+
+1. Push this repo to GitHub.
+2. In Render, create a new Blueprint from this repo.
+3. Deploy the `portfolio-analytics-api` service.
+4. Copy the generated URL (example: `https://portfolio-analytics-api.onrender.com`).
+
+Then in Netlify:
+
+1. Site configuration > Environment variables.
+2. Set `VITE_API_BASE_URL` to your Render URL (no trailing slash).
+3. Redeploy Netlify.
