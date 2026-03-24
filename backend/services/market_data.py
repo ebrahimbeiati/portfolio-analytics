@@ -1,11 +1,13 @@
 import yfinance as yf
 
+
 def fetch_company_name(symbol: str) -> str:
     try:
         info = yf.Ticker(symbol).info
         return info.get("longName") or info.get("shortName") or symbol
     except Exception:
         return symbol
+
 
 def fetch_price(symbol: str) -> float:
     ticker = yf.Ticker(symbol)
