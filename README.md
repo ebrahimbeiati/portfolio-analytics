@@ -1,4 +1,6 @@
-# Portfolio Analytics
+# [Portfolio Analytics](https://portfolio-analytics-1.netlify.app/)
+
+## [Portfolio Analytics Repository](https://github.com/ebrahimbeiati/portfolio-analytics)
 
 A small full-stack demo that analyzes a stock portfolio.
 
