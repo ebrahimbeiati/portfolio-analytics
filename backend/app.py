@@ -61,7 +61,6 @@ def _all_symbols_failed_response(results: dict[str, Any]):
     }), 502
 
 @app.route("/portfolio/metrics", methods=["GET", "POST"])
-@app.route("/metrics", methods=["GET", "POST"])
 def portfolio_metrics():
     if request.method == "GET":
         return jsonify(
