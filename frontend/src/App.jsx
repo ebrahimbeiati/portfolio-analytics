@@ -1,16 +1,23 @@
 import { useState } from "react";
 
 const MAX_QUANTITY = 1_000_000;
+const MAX_FETCH_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 1200;
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim();
 const METRICS_API_URL = API_BASE_URL
   ? `${API_BASE_URL}/portfolio/metrics`
   : "/api/portfolio/metrics";
+
+const RETRYABLE_STATUS_CODES = new Set([429, 502, 503, 504]);
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function App() {
   const [symbol, setSymbol] = useState("");
   const [quantity, setQuantity] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
 
   const activeSymbol = result?.top_symbol?.symbol;
   const priceHistory = activeSymbol
@@ -87,6 +94,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setStatusMessage("");
 
     try {
       const parsedQuantity = Number(quantity);
@@ -108,32 +116,65 @@ function App() {
         return;
       }
 
-      const response = await fetch(METRICS_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          positions: [{ symbol, quantity: parsedQuantity }],
-        }),
-      });
+      let response;
+      let data;
 
-      const contentType = response.headers.get("content-type") || "";
-      const isJson = contentType.includes("application/json");
-      const data = isJson ? await response.json() : null;
+      for (let attempt = 1; attempt <= MAX_FETCH_ATTEMPTS; attempt += 1) {
+        try {
+          response = await fetch(METRICS_API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              positions: [{ symbol, quantity: parsedQuantity }],
+            }),
+          });
 
-      if (!response.ok) {
-        throw new Error(
-          data?.error ||
-            "Could not reach the metrics API. In Netlify, set VITE_API_BASE_URL to your backend URL.",
-        );
+          const contentType = response.headers.get("content-type") || "";
+          const isJson = contentType.includes("application/json");
+          data = isJson ? await response.json() : null;
+
+          if (!response.ok) {
+            const message =
+              data?.error ||
+              "Could not reach the metrics API. In Netlify, set VITE_API_BASE_URL to your backend URL.";
+
+            if (
+              RETRYABLE_STATUS_CODES.has(response.status) &&
+              attempt < MAX_FETCH_ATTEMPTS
+            ) {
+              setStatusMessage(
+                `Server is warming up. Retrying ${attempt + 1}/${MAX_FETCH_ATTEMPTS}...`,
+              );
+              await delay(RETRY_BASE_DELAY_MS * attempt);
+              continue;
+            }
+
+            throw new Error(message);
+          }
+
+          if (!data) {
+            throw new Error("Unexpected response from API. Expected JSON.");
+          }
+
+          setStatusMessage("");
+          setResult(data);
+          return;
+        } catch (attemptError) {
+          const isNetworkError = attemptError instanceof TypeError;
+          if (isNetworkError && attempt < MAX_FETCH_ATTEMPTS) {
+            setStatusMessage(
+              `Server is warming up. Retrying ${attempt + 1}/${MAX_FETCH_ATTEMPTS}...`,
+            );
+            await delay(RETRY_BASE_DELAY_MS * attempt);
+            continue;
+          }
+
+          throw attemptError;
+        }
       }
-
-      if (!data) {
-        throw new Error("Unexpected response from API. Expected JSON.");
-      }
-
-      setResult(data);
     } catch (error) {
       console.error("Error fetching metrics:", error);
+      setStatusMessage("");
       setResult({ error: error.message || "Failed to fetch metrics" });
     } finally {
       setLoading(false);
@@ -175,6 +216,12 @@ function App() {
         <button type="submit" disabled={loading} className="submit-button">
           {loading ? "Analyzing..." : "Calculate Metrics"}
         </button>
+
+        {statusMessage && (
+          <p className="status-banner" role="status" aria-live="polite">
+            {statusMessage}
+          </p>
+        )}
       </form>
 
       {result?.error && <div className="error-banner">{result.error}</div>}

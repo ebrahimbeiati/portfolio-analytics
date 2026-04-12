@@ -113,6 +113,16 @@ p {
   padding: 10px 20px;
 }
 
+.status-banner {
+  margin-top: 12px;
+  border: 1px solid #9ec5fe;
+  background: #e7f1ff;
+  color: #084298;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-align: left;
+}
+
 .error-banner {
   margin-top: 20px;
   border: 1px solid #f5c2c7;
